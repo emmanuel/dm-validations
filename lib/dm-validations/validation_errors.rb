@@ -84,8 +84,9 @@ module DataMapper
 
       # Collect all errors into a single list.
       def full_messages
-        errors.inject([]) do |list, pair|
-          list += pair.last
+        errors.inject([]) do |list, (attribute, errors)|
+          more = errors.respond_to?(:full_messages) ? errors.full_messages : errors
+          list += more
         end
       end
 
