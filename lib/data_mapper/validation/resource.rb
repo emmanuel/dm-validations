@@ -50,6 +50,31 @@ module DataMapper
         Context.in_context(context_name) { super(attributes) }
       end
 
+      # Catch data-store exceptions and process them into Violation instances
+      # 
+      # TODO: test-drive this implementation by raising from Resource#_persist
+      #   consider how to propagate errors from parents/children back to 'root'
+      def save_self
+        return_value = super
+      rescue Exception => e
+        raise(e) unless validation_persistence_exception?(e)
+        violations = process_persistence_exception(e)
+        violations.each { |v| errors[v.attribute_name] << v }
+        false
+      end
+
+    private
+
+      # TODO: this should be delegated to the Adapter layer.
+      def validation_persistence_exception?(exception)
+        false
+      end
+
+      # TODO: this should be delegated to the Adapter layer.
+      def process_persistence_exception(exception)
+        [ ]
+      end
+
       # @api private
       def validate_or_halt
         throw :halt if Context.any? && !valid?(model.validators.current_context)
